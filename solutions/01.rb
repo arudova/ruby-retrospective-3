@@ -46,9 +46,9 @@ end
 class Array
 
   def frequencies
-    freqs_hash = {}
-    self.each { |element| freqs_hash[element] = self.count element }
-    return freqs_hash
+    frequencies_hash = {}
+    self.each { |element| frequencies_hash[element] = self.count element }
+    return frequencies_hash
   end
 
   def average

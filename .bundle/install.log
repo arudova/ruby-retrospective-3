@@ -1,0 +1,13 @@
+# Logfile created on 2014-01-21 23:28:19 +0200 by logger.rb/41902
+I, [2014-01-21T23:28:19.264027 #3255]  INFO -- : 0:  rake (10.1.1) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1@global/specifications/rake-10.1.1.gemspec
+I, [2014-01-21T23:28:19.264511 #3255]  INFO -- : 0:  diff-lcs (1.2.5) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/diff-lcs-1.2.5.gemspec
+I, [2014-01-21T23:28:19.264865 #3255]  INFO -- : 0:  ffi (1.9.3) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/ffi-1.9.3.gemspec
+I, [2014-01-21T23:28:19.265188 #3255]  INFO -- : 0:  ffi-aspell (0.0.3) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/ffi-aspell-0.0.3.gemspec
+I, [2014-01-21T23:28:19.265480 #3255]  INFO -- : 0:  rspec-core (2.14.7) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/rspec-core-2.14.7.gemspec
+I, [2014-01-21T23:28:19.265767 #3255]  INFO -- : 0:  rspec-expectations (2.14.4) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/rspec-expectations-2.14.4.gemspec
+I, [2014-01-21T23:28:19.266079 #3255]  INFO -- : 0:  rspec-mocks (2.14.4) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/rspec-mocks-2.14.4.gemspec
+I, [2014-01-21T23:28:19.266379 #3255]  INFO -- : 0:  rspec (2.14.1) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/rspec-2.14.1.gemspec
+I, [2014-01-21T23:28:19.266685 #3255]  INFO -- : 0:  trollop (2.0) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/trollop-2.0.gemspec
+I, [2014-01-21T23:28:19.267024 #3255]  INFO -- : 0:  skeptic (0.0.7) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/skeptic-0.0.7.gemspec
+I, [2014-01-21T23:28:20.622563 #3255]  INFO -- : 0:  watchr (0.7) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1/specifications/watchr-0.7.gemspec
+I, [2014-01-21T23:28:20.623124 #3255]  INFO -- : 0:  bundler (1.5.1) from /Users/Adele/.rvm/gems/ruby-2.1.0-preview1@global/specifications/bundler-1.5.1.gemspec
