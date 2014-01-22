@@ -1,96 +1,100 @@
 module Asm
-  class Evaluate
-    operations = {
-      mov: :initialize_reg,
-      inc: :increase,
-      dec: :decrease,
-      cmp: :compare,
-      jmp: :jmp,
-    }
-
-    operations.each do |operation_name, operation|
-      define_method operation_name do |destination, value = 1|
-        @operations_queue << [operation, destination, value ]
-      end
-    end
-
-    help_operations = {
-      initialize_reg: :+,
-      increase:       :+,
-      decrease:       :-,
-    }
-
-    help_operations.each do |operation_name, operation|
-      define_method operation_name do |destination ,other|
-        @registers[destination] =
-        @registers[destination].public_send operation, get_value(other)
-      end
-    end
-
-    def initialize(&block)
-      @ax, @bx, @cx, @dx      = :ax, :bx, :cx, :dx
-      @cmp, @current_position = 0, 0
-      @operations_queue       = []
-      @label_names            = {}
-      @jumps_list = {
-        jmp: :+,
-        je:  :==,
-        jne: :!=,
-        jl:  :<,
-        jle: :<=,
-        jg:  :>,
-        jge: :>=,
-      }
-      @registers = { ax: 0, bx: 0, cx: 0, dx: 0 }
-      instance_eval &block
-    end
-
-    def perform_operations
-      while (@current_position != @operations_queue.length)
-        [@operations_queue[@current_position]].each do |operation, destination, args|
-          if @jumps_list.has_key? operation
-            label_position = @label_names.fetch(destination, destination)
-            call_jump operation, label_position
-          else
-            public_send operation, destination, arguments
-            @current_position += 1
-          end
-        end
-      end
-
-      @registers.values.to_a
-    end
-
-    def method_missing(name, *arguments)
-      @operations_queue << [name, *arguments] if @jumps_list.has_key? name
-
-      name
-    end
-
-    def compare(destination, other)
-      @cmp = @registers[destination] <=> get_value(other)
-    end
-
-    private
-
-    def get_value(value)
-      @registers[value] or value
-    end
-
-    def call_jump(type, label_position)
-      if @cmp.method(@jumps_list[type]).call 0
-        @current_position  = label_position
-      else
-        @current_position += 1
-      end
-    end
-
-    def label(name)
-      @label_names[name] = @operations_queue.length
-    end
+  def self.asm(&block)
+    memory = Memory.new
+    memory.instance_eval(&block)
+    memory.execute
+    memory.table.values
   end
 
-  def self.asm(&block)
-    Evaluate.new(&block).perform_operations
+  class Memory
+    attr_reader :table
+
+    def initialize
+      @table = { ax: 0, bx: 0, cx: 0, dx: 0 }
+      @instructions = []
+      @labels = {}
+      @comparison = 0
+      @counter = 0
+    end
+
+    INSTRUCTIONS = {
+    mov: ->(destination_register, source) do
+      @table[destination_register] = source.is_a?(Symbol) ? @table[source] : source
+    end,
+
+    inc: ->(destination_register, value = 1) do
+      @table[destination_register] += value.is_a?(Symbol) ? @table[value] : value
+    end,
+
+    dec: ->(destination_register, value = 1) do
+      @table[destination_register] -= value.is_a?(Symbol) ? @table[value] : value
+    end,
+
+    cmp: ->(register, value) do
+      @comparison = if value.is_a?(Symbol)
+        table[register] <=> table[value]
+        else
+          table[register] <=> value
+        end
+    end,
+
+    jmp: ->(where) do
+      where.is_a?(Integer) ? @counter = where  : @counter = @labels[where] - 1
+    end,
+
+    je:  ->(where) do
+      if @comparison == 0
+        where.is_a?(Integer) ? @counter = where - 1  : @counter = @labels[where] - 1
+      end
+    end,
+
+    jne: ->(where) do
+      unless @comparison == 0
+        where.is_a?(Integer) ? @counter = where - 1  : @counter = @labels[where] - 1
+      end
+    end,
+
+    jl:  ->(where) do
+      if @comparison < 0
+        where.is_a?(Integer) ? @counter = where - 1  : @counter = @labels[where] - 1
+      end
+    end,
+
+    jle: ->(where) do
+      if @comparison <= 0
+        where.is_a?(Integer) ? @counter = where - 1  : @counter = @labels[where] - 1
+      end
+    end,
+
+    jg:  ->(where) do
+      if @comparison > 0
+        where.is_a?(Integer) ? @counter = where - 1  : @counter = @labels[where] - 1
+      end
+    end,
+
+    jge: ->(where) do
+      if @comparison >= 0
+        where.is_a?(Integer) ? @counter = where - 1  : @counter = @labels[where] - 1
+      end
+    end
+    }
+
+    def method_missing(name, *args)
+      if INSTRUCTIONS.keys.include?(name)
+        @instructions << [name, args]
+      elsif name == :label
+        @labels[args.first] = @instructions.length
+      else
+        name
+      end
+    end
+
+    def execute
+      until @counter == @instructions.length
+        instructions_result = self.instance_exec(*@instructions[@counter][1],
+          &INSTRUCTIONS[@instructions[@counter][0]])
+        @counter += 1
+      end
+    end
   end
 end
