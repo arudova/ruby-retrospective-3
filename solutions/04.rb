@@ -1,89 +1,96 @@
 module Asm
-	attr_accessor :registers, :cmp, :instructions_to_be_executed
-	attr_accessor :ax, :bx, :cx, :dx, :all_functions
+  class Evaluator
+    operations = {
+      mov: :initialize_reg,
+      inc: :increase,
+      dec: :decrease,
+      cmp: :compare,
+      jmp: :jmp,
+    }
 
-	def self.asm(&block)
-		p self.class
-		block.call
-		#@registers.values
-	end
+    operations.each do |operation_name, operation|
+      define_method operation_name do |destination, value = 1|
+        @operations_queue << [operation, destination, value ]
+      end
+    end
 
-	def mov(destination_register, source)
-		@registers = Hash.new if @registers == nil
-		p destination_register.to_proc.call
-		p source
-		if source.class == Fixnum
-			@registers[destination_register.to_proc.call] = source
-		else
-			@registers[destination_register.to_proc.call] = @registers[source]
-		end
-		p @registers
-	end
+    help_operations = {
+      initialize_reg: :+,
+      increase:       :+,
+      decrease:       :-,
+    }
 
-	def inc(destination_register, value)
-		if value.class == Fixnum
-			@registers[destination_register] += value
-		else
-			@registers[destination_register] += @registers[value]
-		end
-	end
+    help_operations.each do |operation_name, operation|
+      define_method operation_name do |destination ,other|
+        @registers[destination] =
+        @registers[destination].public_send operation, get_value(other)
+      end
+    end
 
-	def dec(destination_register, value = -1)
-		if value.class == Fixnum
-			@registers[destination_register] -= value
-		else
-			@registers[destination_register] -= @registers[value]
-		end
-	end
+    def initialize(&block)
+      @ax, @bx, @cx, @dx      = :ax, :bx, :cx, :dx
+      @cmp, @current_position = 0, 0
+      @operations_queue       = []
+      @label_names            = {}
+      @jumps_list = {
+        jmp: :+,
+        je:  :==,
+        jne: :!=,
+        jl:  :<,
+        jle: :<=,
+        jg:  :>,
+        jge: :>=,
+      }
+      @registers = { ax: 0, bx: 0, cx: 0, dx: 0 }
+      instance_eval &block
+    end
 
-	def cmp(register, value)
-		if value.class == Fixnum
-			@cmp = (@registers[destination_register] <=> value)
-		else
-			@cmp = (@registers[destination_register] <=> @registers[value])
-		end
-	end
+    def perform_operations
+      while (@current_position != @operations_queue.length)
+        [@operations_queue[@current_position]].each do |operation, destination, arguments|
+          if @jumps_list.has_key? operation
+            label_position = @label_names.fetch(destination, destination)
+            call_jump operation, label_position
+          else
+            public_send operation, destination, arguments
+            @current_position += 1
+          end
+        end
+      end
 
-	def label(label_name)
-	end
+      @registers.values.to_a
+    end
 
-	def jmp(where)
-	end
+    def method_missing(name, *arguments)
+      @operations_queue << [name, *arguments] if @jumps_list.has_key? name
 
-	def je(where)
-	end
+      name
+    end
 
-	def jne(where)
-	end
+    def compare(destination, other)
+      @cmp = @registers[destination] <=> get_value(other)
+    end
 
-	def jl(where)
-	end
+    private
 
-	def jle(where)
-	end
+    def get_value(value)
+      @registers[value] or value
+    end
 
-	def jg(where)
-	end
+    def call_jump(type, label_position)
+      if @cmp.method(@jumps_list[type]).call 0
+        @current_position  = label_position
+      else
+        @current_position += 1
+      end
+    end
 
-	def jge(where)
-	end
+    def label(name)
+      @label_names[name] = @operations_queue.length
+    end
+  end
 
-	def create_result(operation, number)
-		new_result = []
-		@result.each_with_index do |item, index|
-			@your_number = @your_numbers[index]
-			item = item.send operation, number if number.class == Fixnum
-			item = item.send operation, @your_number if number.class == Symbol
-			new_result << item
-		end
-		@result = new_result
-	end
-
-	def method_missing(method_id)
-		:method_id
-	end
-
-	def construct_all_functions(&block)
-	end
-
+  def self.asm(&block)
+    Evaluator.new(&block).perform_operations
+  end
 end
