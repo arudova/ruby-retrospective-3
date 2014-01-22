@@ -1,96 +1,113 @@
 module Asm
-  class Evaluate
-    operations = {
-      mov: :initialize_reg,
-      inc: :increase,
-      dec: :decrease,
-      cmp: :compare,
-      jmp: :jmp,
-    }
-
-    operations.each do |operation_name, operation|
-      define_method operation_name do |destination, value = 1|
-        @operations_queue << [operation, destination, value ]
-      end
+  class Register
+    class << self
+      attr_accessor :flag
     end
 
-    help_operations = {
-      initialize_reg: :+,
-      increase:       :+,
-      decrease:       :-,
-    }
+    attr_reader :value
 
-    help_operations.each do |operation_name, operation|
-      define_method operation_name do |destination ,other|
-        @registers[destination] =
-        @registers[destination].public_send operation, get_value(other)
-      end
+    def initialize
+      @value = 0
     end
 
-    def initialize(&block)
-      @ax, @bx, @cx, @dx      = :ax, :bx, :cx, :dx
-      @cmp, @current_position = 0, 0
-      @operations_queue       = []
-      @label_names            = {}
-      @jumps_list = {
-        jmp: :+,
-        je:  :==,
-        jne: :!=,
-        jl:  :<,
-        jle: :<=,
-        jg:  :>,
-        jge: :>=,
-      }
-      @registers = { ax: 0, bx: 0, cx: 0, dx: 0 }
-      instance_eval &block
+    def mov(source)
+      @value = get_value source
     end
 
-    def perform_operations
-      while (@current_position != @operations_queue.length)
-        [@operations_queue[@current_position]].each do |operation, d, args|
-          if @jumps_list.has_key? operation
-            label_position = @label_names.fetch(destination, destination)
-            call_jump operation, label_position
-          else
-            public_send operation, destination, arguments
-            @current_position += 1
-          end
-        end
-      end
-
-      @registers.values.to_a
+    def inc(source)
+      @value += get_value(source)
     end
 
-    def method_missing(name, *arguments)
-      @operations_queue << [name, *arguments] if @jumps_list.has_key? name
-
-      name
+    def dec(source)
+      @value -= get_value source
     end
 
-    def compare(destination, other)
-      @cmp = @registers[destination] <=> get_value(other)
+    def cmp(source)
+      self.class.flag = @value <=> get_value(source)
     end
 
     private
 
-    def get_value(value)
-      @registers[value] or value
+    def get_value(source)
+      source.is_a?(self.class) ? source.value : source
     end
+  end
 
-    def call_jump(type, label_position)
-      if @cmp.method(@jumps_list[type]).call 0
-        @current_position  = label_position
-      else
-        @current_position += 1
+  class Asm
+
+    REGISTERS = [:ax,:bx, :cx, :dx]
+
+    REGISTER_OPERATIONS = [:mov, :inc, :dec, :cmp]
+
+    JUMPS = {
+      jmp: :+,
+      je:  :==,
+      jne: :!=,
+      jl:  :<,
+      jle: :<=,
+      jg:  :>,
+      jge: :>=,
+    }
+
+    REGISTER_OPERATIONS.each do |operation|
+      define_method operation do |target, value = 1|
+        push_operation target, operation, value
       end
     end
 
+    JUMPS.each do |jump_name, compare_operation|
+      check_operation = -> { Register.flag.public_send compare_operation, 0}
+      define_method jump_name do |target|
+        push_jump(target, check_operation)
+      end
+    end
+
+    def initialize(&block)
+      @commands            = []
+      @label_names         = Hash.new { |_, key| key }
+      @registers           = Hash.new { |hash, key| hash[key] = Register.new }
+      @instruction_pointer = 0
+      instance_eval(&block)
+    end
+
+    def perform_operations
+      while @instruction_pointer < @commands.length
+        @instruction_pointer = @commands[@instruction_pointer].call
+      end
+
+      self
+    end
+
     def label(name)
-      @label_names[name] = @operations_queue.length
+      @label_names[name] = @commands.length
+    end
+
+    def get_registers_values
+      REGISTERS.map { |register| @registers[register].value }
+    end
+
+    def method_missing(name, *arguments)
+      REGISTERS.member?(name) ? @registers[name] : name
+    end
+
+    private
+
+    def push_jump(target, check_flag)
+      @commands << -> do
+        check_flag.call ? @label_names[target] : @instruction_pointer + 1
+      end
+    end
+
+    def push_operation(target, operation, value)
+      @commands << -> do
+        target.send operation, value
+
+        @instruction_pointer + 1
+      end
     end
   end
 
   def self.asm(&block)
-    Evaluate.new(&block).perform_operations
+    Asm.new(&block).perform_operations.get_registers_values
   end
 end
