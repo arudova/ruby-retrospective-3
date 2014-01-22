@@ -12,8 +12,7 @@ class Integer
   end
 
   def prime_factors
-    new_self = self > 0 ? self : -self
-    make_divisors_array 2, [], new_self
+    make_divisors_array 2, [], self.dup.abs
   end
 
   def make_divisors_array(divisor, result_array, new_self)
