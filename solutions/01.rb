@@ -12,7 +12,7 @@ class Integer
   end
 
   def prime_factors
-    new_self = self
+    new_self = self > 0 ? self : -self
     make_divisors_array 2, [], new_self
   end
 
