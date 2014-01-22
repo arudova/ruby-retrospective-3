@@ -32,14 +32,7 @@ class Integer
   end
 
   def digits
-    return [0] if self == 0
-    new_self = self
-    digits_array = []
-    while new_self > 0
-      digits_array << new_self % 10
-      new_self /= 10
-    end
-    return digits_array.reverse
+    abs.to_s.chars.map { |number| number.to_i }
   end
 
 end
