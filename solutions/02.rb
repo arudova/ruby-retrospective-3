@@ -10,10 +10,10 @@ class Task
 end
 
 class Criteria
-  attr_accessor :proc
+  attr_accessor :process
 
-  def initialize(proc)
-    @proc = proc
+  def initialize(process)
+    @process = process
   end
 
   def Criteria.status(target_status)
@@ -29,15 +29,15 @@ class Criteria
   end
 
   def &(other)
-    Criteria.new -> value { @proc.call(value) and other.proc.call(value) }
+    Criteria.new -> value { @process.call(value) and other.process.call(value) }
   end
 
   def |(other)
-    Criteria.new -> value { @proc.call(value) or other.proc.call(value) }
+    Criteria.new -> value { @process.call(value) or other.process.call(value) }
   end
 
   def !
-    Criteria.new -> value { not @proc.call(value) }
+    Criteria.new -> value { not @process.call(value) }
   end
 end
 
@@ -58,7 +58,7 @@ class TodoList
   end
 
   def filter(criteria)
-    TodoList.new @task_list.select(&criteria.proc).compact
+    TodoList.new @task_list.select(&criteria.process).compact
   end
 
   def adjoin(other)
@@ -76,7 +76,7 @@ class TodoList
   def tasks_completed
     @task_list.count { |task| task.status == :done }
   end
-  
+
   def completed?
     @task_list.map { |task| task.status == :done }.all?
   end
