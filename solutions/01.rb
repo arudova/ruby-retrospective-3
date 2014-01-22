@@ -32,6 +32,7 @@ class Integer
   end
 
   def digits
+    return [0] if self == 0
     new_self = self
     digits_array = []
     while new_self > 0
