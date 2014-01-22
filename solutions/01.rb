@@ -63,10 +63,11 @@ class Array
   end
 
   def make_combination(other, result_array)
-    result_array << self.shift << other.shift
-    return result_array += self if other == []
-    return result_array += other if self == []
-    return self.make_combination other, result_array
+    new_self = self.dup
+    result_array << new_self.shift << other.shift
+    return result_array += new_self if other == []
+    return result_array += other if new_self == []
+    return new_self.make_combination other, result_array
   end
 
 end
