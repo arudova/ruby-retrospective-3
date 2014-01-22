@@ -1,5 +1,5 @@
 module Asm
-  class Evaluator
+  class Evaluate
     operations = {
       mov: :initialize_reg,
       inc: :increase,
@@ -47,7 +47,7 @@ module Asm
 
     def perform_operations
       while (@current_position != @operations_queue.length)
-        [@operations_queue[@current_position]].each do |operation, destination, arguments|
+        [@operations_queue[@current_position]].each do |operation, destination, args|
           if @jumps_list.has_key? operation
             label_position = @label_names.fetch(destination, destination)
             call_jump operation, label_position
@@ -91,6 +91,6 @@ module Asm
   end
 
   def self.asm(&block)
-    Evaluator.new(&block).perform_operations
+    Evaluate.new(&block).perform_operations
   end
 end
