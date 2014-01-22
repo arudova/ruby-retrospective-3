@@ -1,7 +1,7 @@
 class Integer
 
   def prime?
-    return false if self <= 0
+    return false if self <= 1
     self.is_not_divisible_by? 2
   end
 
